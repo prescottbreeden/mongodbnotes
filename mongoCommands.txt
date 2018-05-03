@@ -1,0 +1,281 @@
+#############################
+#############################
+###			  ###
+###	Mongo Commands	  ###
+###			  ###
+#############################
+#############################
+
+MAC
+start MongoDB server:	 sudo mongod
+open mongo terminal:	 mongo
+
+//---------------------------------//
+//------------OVERVIEW-------------//
+//---------------------------------//
+
+
+STRUCTURE
+Database >
+	Collection >
+		Document >
+
+Database: a physical container for collecitons. Each database gets its own set of files on the file system. A single MongoDB server typically has multiple databases.
+
+Collection: a group of MongoDB documents. It is the equivalent of an RDBMS table. A collection exists wihtin a single database. Collections do not enforce a schema. Documents within a collection can have different fields. Typically, all documents in a collection are of similar or related purpose.
+
+Document: a set of key-value pairs. Documents have dynamic schema. Dynamic schema means that documents in the same collection do not need to have the same set of fields or structure, and common fields in a colleciton's documents may hold different types of data.  
+
+RDBMS		MongoDB
+databse		database
+table		collection
+tuple/row	document
+column		field
+table join	embedded documents
+primary key	primary key(default key _id provided by mongodb itself)
+
+ADVANTAGES OF MONGO:
+- Schema-less // MongoDB is a document database in which one collection holds different documents . Number of fields, content and size of the document can differ from one document to another.
+- Structure of a single object is clear
+- No complex joins
+- Deep query-ability. MongoDB supports dunamic queries on documents using a document-based query language that's nearly as powerful as SQL.
+- Tuning
+- Ease of scale-out (MongoDB is easy to scale)
+- Conversion/mapping of application objects to database objects not needed.
+- Uses internal memory for storing the (windowed) working set, enabling faster access of data.
+
+WHY USE MONGO:
+- Document oriented storage - data is stored in the form of JSON style documents
+- index on any attribute
+- replication and high availability
+- auto-sharding
+- rich queries
+- fast in-place updates
+- professional support by MongoDB
+
+WHERE TO USE MONGO:
+- Big Data
+- Content Management and Delivery
+- mobile and social infrastructure
+- user data management
+- data hub
+
+//---------------------------------//
+//----------RELATIONSHIPS----------//
+//---------------------------------//
+
+Relationships in MongoDB represent how various documents are logically related ot each other.
+> Can be modeled via EMBEDDED and REFERENCED approaches such as 1:1, 1:N, N:1 or N:N.
+
+SAMPLE:
+
+(user document)
+{
+   "_id":ObjectId("52ffc33cd85242f436000001"),
+   "name": "Tom Hanks",
+   "contact": "987654321",
+   "dob": "01-01-1991"
+}
+
+(address document)
+{
+   "_id":ObjectId("52ffc4a5d85242602e000000"),
+   "building": "22 A, Indiana Apt",
+   "pincode": 123456,
+   "city": "Los Angeles",
+   "state": "California"
+} 
+
+
+//-------------------------------------//
+//---MODELING EMBEDDED RELATIONSHIPS---//
+//-------------------------------------//
+
+In the embedded approach, we will embed the address document inside the user document:
+
+{
+   "_id":ObjectId("52ffc33cd85242f436000001"),
+   "contact": "987654321",
+   "dob": "01-01-1991",
+   "name": "Tom Benzamin",
+   "address": [
+      {
+         "building": "22 A, Indiana Apt",
+         "pincode": 123456,
+         "city": "Los Angeles",
+         "state": "California"
+      },
+      {
+         "building": "170 A, Acropolis Apt",
+         "pincode": 456789,
+         "city": "Chicago",
+         "state": "Illinois"
+      }
+   ]
+} 
+
+retrieve this document with:
+> db.users.findOne({"name":"Tom Benzamin"},{"address":1})
+
+
+//---------------------------------------//
+//---MODELING REFERENCED RELATIONSHIPS---//
+//---------------------------------------//
+
+Designing normalized relationship
+This approach, both user and address documents will be maintained seperately but the user document will contain a field that will reference the address document's id field.
+
+{
+   "_id":ObjectId("52ffc33cd85242f436000001"),
+   "contact": "987654321",
+   "dob": "01-01-1991",
+   "name": "Tom Benzamin",
+   "address_ids": [
+      ObjectId("52ffc4a5d85242602e000000"),
+      ObjectId("52ffc4a5d85242602e000001")
+   ]
+}
+
+use the address_ids to query and fetch the associated addresses:
+
+>var result = db.users.findOne({"name":"Tom Benzamin"},{"address_ids":1})
+>var addresses = db.address.find({"_id":{"$in":result["address_ids"]}})
+
+(first line is to fetch the address_ids fields from user document)
+(second line is to fetch the addresses from address collection)
+
+
+//---------------------------------------//
+//-------Schema Design in MongoDB--------//
+//---------------------------------------//
+
+- do not have have the same set of fields or structure, and common fields in a collection's documents may hold different types of data
+
+- design schema according to user requirements
+- combine objects into one document if you will use them together. otherwise separate them (but make sure there should not be need of joins).
+- Duplicate the data (but limited) because disk space is cheap as compare to compute time
+- Do joins while write, not on read.
+- Optimize your schema for most frequent use cases.
+- Do complex aggregation in the schema.
+
+EXAMPLE SCHEMA
+
+Blog/Website with requirements:
+- every post has a unique title, description and url.
+- every post can have one or more tags.
+- every post has the name of its publisher and total number of likes.
+- every post has comments given by users along with their name, message, data-time and likes.
+- on each post there can be zero or more comments.
+
+RDBMS design:
+3 tables >
+	comments
+	post
+	tag_list
+
+MONGO design:
+1 collection post:
+
+{
+   _id: POST_ID
+   title: TITLE_OF_POST, 
+   description: POST_DESCRIPTION,
+   by: POST_BY,
+   url: URL_OF_POST,
+   tags: [TAG1, TAG2, TAG3],
+   likes: TOTAL_LIKES, 
+   comments: [	
+      {
+         user:'COMMENT_BY',
+         message: TEXT,
+         dateCreated: DATE_TIME,
+         like: LIKES 
+      },
+      {
+         user:'COMMENT_BY',
+         message: TEXT,
+         dateCreated: DATE_TIME,
+         like: LIKES
+      }
+   ]
+}
+
+
+
+//---------------------------------//
+//----------CRUD DATABASEB---------//
+//---------------------------------//
+
+Create database:
+	>use DATABASE_NAME
+
+Check currently selected databse:
+	>db
+
+Check database directory:
+	>show dbs
+
+Insert a document into db:
+	>db.movie.insert({"name":"tutorials point"})
+
+	>db.mycol.insert({
+   		_id: ObjectId(7df78ad8902c),
+   		title: 'MongoDB Overview', 
+   		description: 'MongoDB is no sql database',
+   		by: 'tutorials point',
+   		url: 'http://www.tutorialspoint.com',
+   		tags: ['mongodb', 'database', 'NoSQL'],
+   		likes: 100
+		})
+
+Inserting multiple documents into MongoDB:
+	>>db.post.insert([
+   {
+      title: 'MongoDB Overview', 
+      description: 'MongoDB is no sql database',
+      by: 'tutorials point',
+      url: 'http://www.tutorialspoint.com',
+      tags: ['mongodb', 'database', 'NoSQL'],
+      likes: 100
+   },
+	
+   {
+      title: 'NoSQL Database', 
+      description: "NoSQL database doesn't have tables",
+      by: 'tutorials point',
+      url: 'http://www.tutorialspoint.com',
+      tags: ['mongodb', 'database', 'NoSQL'],
+      likes: 20, 
+      comments: [	
+         {
+            user:'user1',
+            message: 'My first comment',
+            dateCreated: new Date(2013,11,10,2,35),
+            like: 0 
+         }
+      ]
+   }
+])
+
+Create a collection:
+	>db.createColection(name, options)
+	(name of collection to be created - options is a document used to specify configuration of collection.
+	(option fields: capped, autoIndexId, size, max)
+
+To insert the document you can use db.post.save(document) also. If you don't specify _id in the document then save() method will work same as insert() method. If you specify _id then it will replace whole data of document containing _id as specified in save() method.
+
+//---------------------------------------//
+//----------- DESTROYING DATA -----------//
+//---------------------------------------//
+
+Drop currently selected databse:
+	>db.dropDatabase()
+
+Drop collection:
+	>db.COLLECTION_NAME.drop()
+
+
+
+
+##
+
