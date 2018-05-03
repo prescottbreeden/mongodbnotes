@@ -1,10 +1,6 @@
-#############################
-#############################
-###			  ###
-###	Mongo Commands	  ###
-###			  ###
-#############################
-#############################
+//---------------------------------//
+//------------MONGO DB-------------//
+//---------------------------------//
 
 MAC
 start MongoDB server:	 sudo mongod
@@ -202,9 +198,9 @@ MONGO design:
 
 
 
-//---------------------------------//
-//----------CRUD DATABASEB---------//
-//---------------------------------//
+//----------------------------------//
+//----------CREATE DATABASE---------//
+//----------------------------------//
 
 Create database:
 	>use DATABASE_NAME
@@ -215,54 +211,34 @@ Check currently selected databse:
 Check database directory:
 	>show dbs
 
-Insert a document into db:
-	>db.movie.insert({"name":"tutorials point"})
-
-	>db.mycol.insert({
-   		_id: ObjectId(7df78ad8902c),
-   		title: 'MongoDB Overview', 
-   		description: 'MongoDB is no sql database',
-   		by: 'tutorials point',
-   		url: 'http://www.tutorialspoint.com',
-   		tags: ['mongodb', 'database', 'NoSQL'],
-   		likes: 100
-		})
-
-Inserting multiple documents into MongoDB:
-	>>db.post.insert([
-   {
-      title: 'MongoDB Overview', 
-      description: 'MongoDB is no sql database',
-      by: 'tutorials point',
-      url: 'http://www.tutorialspoint.com',
-      tags: ['mongodb', 'database', 'NoSQL'],
-      likes: 100
-   },
-	
-   {
-      title: 'NoSQL Database', 
-      description: "NoSQL database doesn't have tables",
-      by: 'tutorials point',
-      url: 'http://www.tutorialspoint.com',
-      tags: ['mongodb', 'database', 'NoSQL'],
-      likes: 20, 
-      comments: [	
-         {
-            user:'user1',
-            message: 'My first comment',
-            dateCreated: new Date(2013,11,10,2,35),
-            like: 0 
-         }
-      ]
-   }
-])
-
 Create a collection:
-	>db.createColection(name, options)
+	>db.createCollection(name, options)
 	(name of collection to be created - options is a document used to specify configuration of collection.
 	(option fields: capped, autoIndexId, size, max)
 
 To insert the document you can use db.post.save(document) also. If you don't specify _id in the document then save() method will work same as insert() method. If you specify _id then it will replace whole data of document containing _id as specified in save() method.
+
+//---------------------------------------//
+//------------- BASIC CRUD --------------//
+//---------------------------------------//
+
+CREATE
+>db.ninjas.insert({name: "Trey"})
+>db.ninjas.insert({name: "Steve", age: 25})
+>db.ninjas.insert({name: "Bob", age: 43, status: "wise"})
+
+RECALL
+>db.ninjas.find().pretty()
+>db.ninjas.find({name: "Trey"}).pretty()
+
+UPDATE
+> db.ninjas.insert({name: "Tiger Woods", status: "hungry", belt: "yellow"})
+> db.ninjas.update({name: "Tiger Woods"}, {$set:  {location: "Mountain View"}})
+
+DELETE
+>db.ninjas.remove({name: "Trey"})
+>db.ninjas.remove({name: "Trey"}, true)
+
 
 //---------------------------------------//
 //----------- DESTROYING DATA -----------//
@@ -273,6 +249,31 @@ Drop currently selected databse:
 
 Drop collection:
 	>db.COLLECTION_NAME.drop()
+
+//---------------------------------//
+//----------- OPERATORS -----------//
+//---------------------------------//
+
+
+$gt     (greater than)              Use to query selectively on numerical-valued fields
+$gte    (greater than or equal to)	Use to query selectively on numerical-valued fields
+$lt     (less than)	                Use to query selectively on numerical-valued fields
+$lte    (less than or equal to)	    Use to query selectively on numerical-valued fields
+
+$in     (in array)	                Use to find documents who have a particular value within an array.
+$push   (add value to array)        Use to add a value to a key:value pair with an array
+$pop    (remove value from array)   1: last item -- 2: first item
+$addToSet   (prevents duplicate)    Only adds a value if it doesn't already exist
+$pull   (remove by location)        Remove all instances of a value from the documents with the specified array_key that match the Query
+
+//--------------------------------//
+//----------- Examples -----------//
+//--------------------------------//
+
+>db.dojos.find({number_of_students: {$gt: 15}}).pretty()
+>db.students.update({_id: ObjectId("5463d871a6a96d5ed6252f4d")}, {$push: {interests: 'snowboarding'}})
+>db.COLLECTION.update({QUERY}, {$pop: {array_key: (1 or -1)}})
+>db.COLLECTION.update({QUERY}, {$pull: {array_key: VALUE}})
 
 
 
